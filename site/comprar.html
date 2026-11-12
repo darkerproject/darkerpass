@@ -86,15 +86,18 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 /* PAGE FRAME — pantalla fija, contenido centrado vertical */
 .page-frame{ height:calc(100vh - 64px); margin:64px auto 0; max-width:1180px;
   padding:0 24px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; }
-.content{ width:fit-content; max-width:100%; margin-top:-16px; }
+.content{ width:fit-content; max-width:100%; margin-top:-80px; }
 
 /* INTRO — información del evento (datos de ejemplo; vendrán del Sheet) */
-.intro{ margin:0 0 26px; }
+/* En PC ocupa el ancho de los dos cards: nombre sobre el flyer, datos y reseña sobre el formulario */
+.intro{ margin:0 0 26px; display:flex; gap:24px; align-items:flex-end; }
+.intro-main{ flex:0 0 auto; width:calc(var(--card-h) * 0.8); min-width:0; }
+.intro-side{ flex:1 1 0; max-width:560px; min-width:0; }
 .eyebrow{ display:block; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px; }
 .intro h1{ font-size:30px; font-weight:700; letter-spacing:-0.6px; line-height:1.1; }
-.ev-meta{ margin-top:9px; display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; font-size:15px; font-weight:500; color:var(--ink); }
+.ev-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; font-size:15px; font-weight:500; color:var(--ink); }
 .ev-meta .dot{ width:3px; height:3px; border-radius:50%; background:var(--ink-3); flex-shrink:0; }
-.ev-desc{ margin-top:8px; max-width:600px; font-size:14px; line-height:1.5; color:var(--ink-2); }
+.ev-desc{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:6px; font-size:14px; line-height:1.5; color:var(--ink-2); }
 
 .grid{ display:flex; gap:24px; align-items:center; justify-content:flex-start; }
 
@@ -206,15 +209,15 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   .page-frame{ height:auto; min-height:0; margin-top:64px; padding:8px 18px 40px; justify-content:flex-start; align-items:stretch; }
   /* Orden en móvil: etiqueta → flyer → información del evento → formulario */
   .content{ width:100%; padding-top:8px; margin-top:0; display:flex; flex-direction:column; }
-  .intro, .grid{ display:contents; }
+  .intro, .intro-main, .intro-side, .grid{ display:contents; }
   .eyebrow{ order:1; margin-bottom:12px; }
   .flyer-card{ order:2; height:auto; aspect-ratio:4/5; width:100%; max-width:none; margin:0; }
-  .event-info{ order:3; margin:20px 2px 22px; }
-  .steps-card{ order:4; height:auto; min-height:540px; max-width:none; }
-  .intro h1{ font-size:25px; }
+  .intro h1{ order:3; font-size:25px; margin:20px 2px 0; }
+  .ev-meta{ order:4; margin:9px 2px 0; }
+  .ev-desc{ order:5; margin:8px 2px 22px; display:block; overflow:visible; }
+  .steps-card{ order:6; height:auto; min-height:540px; max-width:none; }
   .ev-meta .dot:nth-of-type(4){ display:none; }
   .ev-meta #ev-place{ flex-basis:100%; }
-  .ev-desc{ max-width:none; }
 }
 
 /* ── MOBILE header + carrusel ── */
@@ -290,11 +293,13 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   <div class="content">
   <!-- Información del evento: datos de ejemplo. Al conectar el Sheet, se llenan por id. -->
   <div class="intro">
-    <span class="eyebrow">Reserva tu entrada</span>
-    <div class="event-info">
+    <div class="intro-main">
+      <span class="eyebrow">Reserva tu entrada</span>
       <h1 id="ev-name">Kids in the Dark</h1>
+    </div>
+    <div class="intro-side">
       <p class="ev-meta"><span id="ev-date">Viernes 27 de febrero, 2026</span><span class="dot"></span><span id="ev-time">9:00 p. m.</span><span class="dot"></span><span id="ev-place">Feria Bar, Barranco</span></p>
-      <p class="ev-desc" id="ev-desc">Una noche de indie, post-punk y shoegaze con las bandas que están moviendo la escena independiente de Lima. Sonido en vivo, luces bajas y la pista abierta hasta el cierre.</p>
+      <p class="ev-desc" id="ev-desc">Una noche de indie, post-punk y shoegaze con las bandas que están moviendo la escena independiente de Lima. Sonido en vivo y pista abierta hasta el cierre.</p>
     </div>
   </div>
 
