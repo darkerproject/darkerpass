@@ -60,9 +60,21 @@ body {
 #nav-overlay.open .nav-links a:nth-child(5) { transition-delay:.19s; }
 
 
+/* Volver a la página anterior — idéntico al de comprar.html */
+.page-back {
+  position: absolute; top: 82px; left: 44px; z-index: 30;
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #6e6e73; text-decoration: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px; font-weight: 500; transition: color .2s;
+  -webkit-font-smoothing: antialiased;
+}
+.page-back:hover { color: #1d1d1f; }
+.page-back svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
 /* ── BUSQUEDA PAGE ── */
 main.busqueda-main {
-  padding: 96px 48px 48px;
+  padding: 126px 48px 48px;
   max-width: 1400px;
   margin: 0 auto;
   display: grid;
@@ -388,9 +400,10 @@ main.busqueda-main {
   }
 
 
+  .page-back { top: 82px; left: 20px; }
   main.busqueda-main {
     grid-template-columns: 1fr;
-    padding: 84px 16px 32px;
+    padding: 118px 16px 32px;
     gap: 20px;
   }
   .bcard { padding: 22px; border-radius: 18px; }
@@ -442,6 +455,8 @@ main.busqueda-main {
     <svg viewBox="0 0 8 14"><path d="M2 1 L6 7 L2 13" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </span>
 </div>
+
+<a href="index.html" class="page-back" id="page-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Volver</a>
 
 <main class="busqueda-main">
   <div class="busqueda-content">
@@ -649,6 +664,15 @@ navOverlay.querySelectorAll('a').forEach(function(a) {
     hamburger.classList.remove('open');
     navOverlay.classList.remove('open');
   });
+});
+
+// "Volver": regresa a la página desde la que se llegó. Si se entró directo, va a la home.
+document.getElementById('page-back').addEventListener('click', function(e) {
+  var ref = document.referrer;
+  if (ref && ref.indexOf(window.location.origin + '/') === 0 && window.history.length > 1) {
+    e.preventDefault();
+    window.history.back();
+  }
 });
 
 // Buscador: muestra el texto de ?q= y, con la lupa o Enter, va a busqueda.html?q=<texto>
