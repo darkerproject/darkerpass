@@ -172,6 +172,7 @@ body {
 
 /* ── RECIENTES CARDS ── */
 .reciente-card {
+  cursor: pointer;
   flex-shrink: 0;
   width: 460px;
   display: flex;
@@ -797,9 +798,9 @@ checkPill();
 
 // Drag to scroll for desktop
 document.querySelectorAll('.carousel-track').forEach(function(track) {
-  var isDown = false, startX, scrollLeft;
+  var isDown = false, startX, scrollLeft, moved = false;
   track.addEventListener('mousedown', function(e) {
-    isDown = true; track.style.cursor = 'grabbing';
+    isDown = true; moved = false; track.style.cursor = 'grabbing';
     startX = e.pageX - track.offsetLeft;
     scrollLeft = track.scrollLeft;
   });
@@ -809,7 +810,21 @@ document.querySelectorAll('.carousel-track').forEach(function(track) {
     if (!isDown) return;
     e.preventDefault();
     var x = e.pageX - track.offsetLeft;
+    if (Math.abs(x - startX) > 5) moved = true;
     track.scrollLeft = scrollLeft - (x - startX);
+  });
+  // Si se arrastró el carrusel, el clic que queda al soltar no cuenta como clic en la card
+  track.addEventListener('click', function(e) {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+});
+
+// Card completa clicable: imagen, texto o botón llevan al mismo destino que "Entradas"
+document.querySelectorAll('.reciente-card').forEach(function(card) {
+  card.addEventListener('click', function(e) {
+    if (e.target.closest('a')) return;
+    var btn = card.querySelector('.info-btn');
+    if (btn) window.location.href = btn.getAttribute('href');
   });
 });
 </script>
