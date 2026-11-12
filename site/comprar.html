@@ -89,15 +89,18 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 .content{ width:fit-content; max-width:100%; margin-top:-80px; }
 
 /* INTRO — información del evento (datos de ejemplo; vendrán del Sheet) */
-/* En PC ocupa el ancho de los dos cards: nombre sobre el flyer, datos y reseña sobre el formulario */
+/* En PC ocupa el ancho de los dos cards: nombre y datos sobre el flyer, reseña sobre el formulario */
 .intro{ margin:0 0 26px; display:flex; gap:24px; align-items:flex-end; }
 .intro-main{ flex:0 0 auto; width:calc(var(--card-h) * 0.8); min-width:0; }
 .intro-side{ flex:1 1 0; max-width:560px; min-width:0; }
 .eyebrow{ display:block; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px; }
 .intro h1{ font-size:30px; font-weight:700; letter-spacing:-0.6px; line-height:1.1; }
-.ev-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; font-size:15px; font-weight:500; color:var(--ink); }
-.ev-meta .dot{ width:3px; height:3px; border-radius:50%; background:var(--ink-3); flex-shrink:0; }
-.ev-desc{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; margin-top:6px; font-size:14px; line-height:1.5; color:var(--ink-2); }
+/* Fecha · hora · lugar: el punto separador se oculta solo al inicio de una línea si el texto salta */
+.ev-meta{ margin-top:9px; overflow:hidden; font-size:14px; font-weight:500; color:var(--ink); }
+.ev-meta-in{ display:flex; flex-wrap:wrap; row-gap:4px; margin-left:-23px; }
+.ev-meta-in span{ position:relative; padding-left:23px; white-space:nowrap; }
+.ev-meta-in span::before{ content:''; position:absolute; left:10px; top:50%; width:3px; height:3px; margin-top:-1px; border-radius:50%; background:var(--ink-3); }
+.ev-desc{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; font-size:14px; line-height:1.5; color:var(--ink-2); }
 
 .grid{ display:flex; gap:24px; align-items:center; justify-content:flex-start; }
 
@@ -213,11 +216,9 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   .eyebrow{ order:1; margin-bottom:12px; }
   .flyer-card{ order:2; height:auto; aspect-ratio:4/5; width:100%; max-width:none; margin:0; }
   .intro h1{ order:3; font-size:25px; margin:20px 2px 0; }
-  .ev-meta{ order:4; margin:9px 2px 0; }
+  .ev-meta{ order:4; margin:9px 2px 0; font-size:15px; }
   .ev-desc{ order:5; margin:8px 2px 22px; display:block; overflow:visible; }
   .steps-card{ order:6; height:auto; min-height:540px; max-width:none; }
-  .ev-meta .dot:nth-of-type(4){ display:none; }
-  .ev-meta #ev-place{ flex-basis:100%; }
 }
 
 /* ── MOBILE header + carrusel ── */
@@ -296,9 +297,9 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
     <div class="intro-main">
       <span class="eyebrow">Reserva tu entrada</span>
       <h1 id="ev-name">Kids in the Dark</h1>
+      <p class="ev-meta"><span class="ev-meta-in"><span id="ev-date">Viernes 27 de febrero, 2026</span><span id="ev-time">9:00 p. m.</span><span id="ev-place">Feria Bar, Barranco</span></span></p>
     </div>
     <div class="intro-side">
-      <p class="ev-meta"><span id="ev-date">Viernes 27 de febrero, 2026</span><span class="dot"></span><span id="ev-time">9:00 p. m.</span><span class="dot"></span><span id="ev-place">Feria Bar, Barranco</span></p>
       <p class="ev-desc" id="ev-desc">Una noche de indie, post-punk y shoegaze con las bandas que están moviendo la escena independiente de Lima. Sonido en vivo y pista abierta hasta el cierre.</p>
     </div>
   </div>
