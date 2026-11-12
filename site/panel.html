@@ -70,7 +70,7 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); }
   box-shadow:0 2px 8px rgba(0,87,255,0.25); transition:background .18s, transform .1s; }
 .btn-pill:hover{ background:var(--blue-hover); } .btn-pill:active{ transform:scale(0.98); }
 .btn-pill svg{ width:15px; height:15px; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; }
-.btn-ghost{ display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 16px; border-radius:999px; border:1px solid var(--line-soft); background:var(--card); cursor:pointer;
+.btn-ghost{ text-decoration:none; display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 16px; border-radius:999px; border:1px solid var(--line-soft); background:var(--card); cursor:pointer;
   font-family:var(--font); font-size:13px; font-weight:500; color:var(--ink); transition:border-color .2s, background .2s; }
 .btn-ghost:hover{ border-color:var(--line); background:#fafafa; }
 .btn-ghost svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
@@ -209,6 +209,32 @@ td .st::before{ content:''; width:6px; height:6px; border-radius:50%; background
 td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
 .table-foot{ margin-top:16px; font-size:12.5px; color:var(--ink-3); }
 
+.sub{ margin:36px 0 14px; display:flex; align-items:baseline; gap:10px; }
+.sub h2{ font-size:19px; font-weight:700; letter-spacing:-0.3px; }
+.sub span{ font-size:13px; color:var(--ink-3); }
+.badge.draft{ background:#ececf0; color:var(--ink-2); }
+.ev-flyer.vacio{ background:var(--bg); border:1.5px dashed var(--line); }
+.act.danger{ color:#d70015; }
+.crumb{ display:inline-flex; align-items:center; gap:6px; margin-bottom:14px; font-size:14px; font-weight:500; color:var(--ink-2); text-decoration:none; }
+.crumb:hover{ color:var(--ink); }
+.crumb svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; }
+
+/* Diálogo de confirmación */
+.modal{ position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(0,0,0,0.32);
+  opacity:0; visibility:hidden; transition:opacity .2s, visibility .2s; }
+.modal.open{ opacity:1; visibility:visible; }
+.modal-card{ width:100%; max-width:400px; background:var(--card); border-radius:var(--radius-card); padding:28px 26px 22px; box-shadow:0 24px 60px rgba(0,0,0,0.22);
+  transform:translateY(8px) scale(0.98); transition:transform .22s cubic-bezier(.2,.9,.3,1); }
+.modal.open .modal-card{ transform:none; }
+.modal-card h3{ font-size:20px; font-weight:700; letter-spacing:-0.3px; line-height:1.2; }
+.modal-card p{ margin-top:8px; font-size:14px; line-height:1.5; color:var(--ink-2); }
+.modal-actions{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
+.modal-actions button{ height:46px; border-radius:999px; border:none; cursor:pointer; font-family:var(--font); font-size:14.500px; font-weight:600; transition:background .15s, transform .1s; }
+.modal-actions button:active{ transform:scale(0.99); }
+.m-primary{ background:var(--blue); color:#fff; } .m-primary:hover{ background:var(--blue-hover); }
+.m-danger{ background:#fff; color:#d70015; border:1px solid var(--line-soft)!important; } .m-danger:hover{ background:#fff5f5; }
+.m-plain{ background:none; color:var(--ink-2); } .m-plain:hover{ color:var(--ink); }
+
 @media (max-width:880px){
   /* En móvil el sidebar pasa a ser una barra inferior */
   .sidebar{ top:auto; right:0; width:auto; height:64px; flex-direction:row; align-items:center; padding:0 8px; }
@@ -253,6 +279,7 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
   <span class="side-label">Organizador</span>
   <nav class="side-nav" id="side-nav">
     <a href="#inicio" data-view="inicio"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>Inicio</a>
+    <a href="#eventos" data-view="eventos"><svg viewBox="0 0 24 24"><rect x="3.500" y="5" width="17" height="15" rx="3"/><path d="M3.500 10h17M8 3v4M16 3v4"/></svg>Eventos</a>
     <a href="#finanzas" data-view="finanzas"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>Finanzas</a>
     <a href="#asistentes" data-view="asistentes"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.4c2.1.8 3.5 2.800 3.500 5.600"/></svg>Asistentes</a>
   </nav>
@@ -290,11 +317,8 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
 
     <section class="sec">
       <div class="sec-head">
-        <h2>Mis eventos</h2>
-        <div class="tabs" id="ev-tabs">
-          <button class="on" data-tab="activos">Activos</button>
-          <button data-tab="pasados">Pasados</button>
-        </div>
+        <h2>Eventos activos</h2>
+        <a href="#eventos" class="link">Ver todos tus eventos</a>
       </div>
       <div class="events" id="events"></div>
     </section>
@@ -314,6 +338,39 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- ═══ EVENTOS: borradores y activos. Los pasados van aparte. ═══ -->
+  <div class="view" id="view-eventos">
+    <div class="top">
+      <div>
+        <span class="eyebrow">Eventos</span>
+        <h1>Tus eventos</h1>
+        <p class="lead">Los que estás creando y los que ya están a la venta.</p>
+      </div>
+      <div class="tools">
+        <a href="#pasados" class="btn-ghost"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/></svg>Eventos pasados</a>
+      </div>
+    </div>
+
+    <div class="sub"><h2>Borradores</h2><span id="bor-count"></span></div>
+    <div class="events" id="borradores"></div>
+
+    <div class="sub"><h2>Activos</h2><span id="act-count"></span></div>
+    <div class="events" id="events-all"></div>
+  </div>
+
+  <!-- ═══ EVENTOS PASADOS: historial, se entra desde el botón de Eventos ═══ -->
+  <div class="view" id="view-pasados">
+    <a href="#eventos" class="crumb"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Eventos</a>
+    <div class="top">
+      <div>
+        <span class="eyebrow">Historial</span>
+        <h1>Eventos pasados</h1>
+        <p class="lead">Los eventos que ya se realizaron.</p>
+      </div>
+    </div>
+    <div class="events" id="events-past" style="margin-top:28px"></div>
   </div>
 
   <!-- ═══ FINANZAS: detalle por evento (carga el de fecha más próxima) ═══ -->
@@ -391,6 +448,17 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
 </main>
 </div>
 
+<!-- Confirmación para eliminar un borrador -->
+<div class="modal" id="del-modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
+  <div class="modal-card">
+    <h3 id="del-title">¿Eliminar este borrador?</h3>
+    <p>Se perderá todo lo que llevabas de este evento. Esta acción no se puede deshacer.</p>
+    <div class="modal-actions">
+      <button class="m-danger" id="del-ok">Eliminar borrador</button>
+      <button class="m-plain" id="del-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -493,7 +561,7 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
     { k: 'Ingresos',            v: soles(tot.ing),                          n: 'En tus eventos activos' },
     { k: 'Entradas vendidas',   v: tot.ven,                                 n: 'En tus eventos activos' },
     { k: 'Aforo disponible',    v: (tot.afo - tot.ven) + ' <small>de ' + tot.afo + '</small>', n: Math.round(tot.ven / tot.afo * 100) + '% del aforo vendido' },
-    { k: 'Eventos activos',     v: n,                                       n: PANEL.pasados.length + ' eventos pasados' }
+    { k: 'Eventos activos',     v: n,                                       n: 'A la venta ahora' }
   ].map(function(x){ return '<div class="kpi"><div class="k">' + x.k + '</div><div class="v">' + x.v + '</div><div class="n">' + x.n + '</div></div>'; }).join('');
 
   /* ── Mis eventos ── */
@@ -523,21 +591,56 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
     '</article>';
   }
   var NUEVO = '<a href="crear-evento.html" class="ev-new"><div class="plus">' + ICON.plus + '</div><b>Crear evento nuevo</b><span>Sube tu flyer, define precios y aforo, y empieza a vender.</span></a>';
-  function pintarEventos(tab){
-    var html;
-    if (tab === 'pasados') html = PANEL.pasados.length ? PANEL.pasados.map(cardPasado).join('') : '<div class="empty">Todavía no tienes eventos pasados.</div>';
-    else html = PANEL.eventos.map(cardActivo).join('') + NUEVO;
-    $('events').innerHTML = html;
+  $('events').innerHTML = PANEL.eventos.map(cardActivo).join('') + NUEVO;          // Inicio
+  $('events-all').innerHTML = PANEL.eventos.map(cardActivo).join('') + NUEVO;      // Eventos
+  $('act-count').textContent = PANEL.eventos.length + (PANEL.eventos.length === 1 ? ' evento a la venta' : ' eventos a la venta');
+  $('events-past').innerHTML = PANEL.pasados.length ? PANEL.pasados.map(cardPasado).join('') : '<div class="empty">Todavía no tienes eventos pasados.</div>';
+
+  /* ── Borradores ──
+     CONEXIÓN: en esta versión visual viven en este navegador (localStorage), los
+     guarda crear-evento.html al salir sin terminar. Con el backend vendrán de la API. */
+  var CLAVE = 'dp_borradores';
+  function leerBorradores(){
+    var crudo = null; try { crudo = localStorage.getItem(CLAVE); } catch (e) {}
+    if (crudo === null) {   // primera visita: un borrador de ejemplo para ver cómo luce
+      var ejemplo = [{ id: 'ejemplo', nombre: 'Viernes de Copas', flyer: '', flyerNombre: '', hechos: 5, total: 12, actualizado: '2026-02-16T19:30:00',
+        respuestas: { resena: 'Fiesta de viernes con DJs invitados, cocteles de autor y pista abierta hasta el cierre.', nombre: 'Viernes de Copas',
+                      fecha: 'Viernes 10 de abril de 2026', hora: '10:00 p. m.', lugar: 'Sala Raymondi, Miraflores' } }];
+      try { localStorage.setItem(CLAVE, JSON.stringify(ejemplo)); } catch (e) {}
+      return ejemplo;
+    }
+    try { return JSON.parse(crudo) || []; } catch (e) { return []; }
   }
-  $('ev-tabs').addEventListener('click', function(e){
-    var b = e.target.closest('button'); if (!b) return;
-    $('ev-tabs').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
-    pintarEventos(b.dataset.tab);
+  function cardBorrador(b){
+    var pct = Math.round(b.hechos / b.total * 100), r = b.respuestas || {};
+    var cuando = new Date(b.actualizado).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+    var linea = [r.fecha, r.lugar].filter(Boolean).map(esc).join('<br>') || 'Aún sin fecha ni lugar';
+    return '<article class="ev">' +
+      '<div class="ev-top"><div class="ev-flyer' + (b.flyer ? '' : ' vacio') + '">' + (b.flyer ? '<img src="' + esc(b.flyer) + '" alt="">' : '') + '</div>' +
+        '<div class="ev-info"><span class="badge draft">Borrador</span><h3>' + esc(b.nombre || 'Evento sin nombre') + '</h3><p>' + linea + '</p></div></div>' +
+      '<div class="meter"><div class="row"><span><b>' + b.hechos + '</b> de ' + b.total + ' datos completados</span><span>Guardado el ' + esc(cuando) + '</span></div><div class="bar"><i style="width:' + pct + '%"></i></div></div>' +
+      '<div class="ev-actions"><a href="crear-evento.html?borrador=' + encodeURIComponent(b.id) + '" class="act primary">Continuar</a>' +
+      '<button class="act danger" data-eliminar="' + esc(b.id) + '">Eliminar</button></div>' +
+    '</article>';
+  }
+  function pintarBorradores(){
+    var l = leerBorradores();
+    $('bor-count').textContent = l.length ? l.length + (l.length === 1 ? ' evento sin terminar' : ' eventos sin terminar') : '';
+    $('borradores').innerHTML = l.length ? l.map(cardBorrador).join('') : '<div class="empty">No tienes borradores. Si sales de «Crear evento» sin terminar, podrás guardarlo y aparecerá aquí.</div>';
+  }
+  pintarBorradores();
+  var porEliminar = '', delModal = $('del-modal');
+  $('del-ok').addEventListener('click', function(){
+    try { localStorage.setItem(CLAVE, JSON.stringify(leerBorradores().filter(function(b){ return b.id !== porEliminar; }))); } catch (e) {}
+    delModal.classList.remove('open'); pintarBorradores(); toast('Borrador eliminado');
   });
-  pintarEventos('activos');
+  $('del-cancel').addEventListener('click', function(){ delModal.classList.remove('open'); });
+  delModal.addEventListener('click', function(e){ if (e.target === delModal) delModal.classList.remove('open'); });
 
   // Acciones de las cards (delegadas)
   document.addEventListener('click', function(e){
+    var d = e.target.closest('[data-eliminar]');
+    if (d) { porEliminar = d.dataset.eliminar; delModal.classList.add('open'); return; }
     var c = e.target.closest('[data-copiar]');
     if (c) {
       // Enlace relativo al sitio actual: funciona igual en la URL de Vercel y en el dominio final
@@ -679,13 +782,13 @@ td .st.in{ color:var(--ink); } td .st.in::before{ background:var(--blue); }
   });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') account.classList.remove('open'); });
 
-  /* ── Navegación entre vistas (panel.html#inicio, #finanzas, #asistentes) ── */
-  var VISTAS = ['inicio', 'finanzas', 'asistentes'];
+  /* ── Navegación entre vistas (panel.html#inicio, #eventos, #pasados, #finanzas, #asistentes) ── */
+  var VISTAS = ['inicio', 'eventos', 'pasados', 'finanzas', 'asistentes'];
   function mostrar(){
     var v = window.location.hash.replace('#', '');
     if (VISTAS.indexOf(v) === -1) v = 'inicio';
     VISTAS.forEach(function(x){ $('view-' + x).classList.toggle('on', x === v); });
-    $('side-nav').querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.dataset.view === v); });
+    $('side-nav').querySelectorAll('a').forEach(function(a){ a.classList.toggle('on', a.dataset.view === (v === 'pasados' ? 'eventos' : v)); });
     account.classList.remove('open');
     window.scrollTo(0, 0);
   }

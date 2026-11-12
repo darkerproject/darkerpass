@@ -112,6 +112,22 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 .toast.show{ opacity:1; transform:translate(-50%,0); }
 .scrim{ display:none; }
 
+/* Diálogo de confirmación */
+.modal{ position:fixed; inset:0; z-index:300; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(0,0,0,0.32);
+  opacity:0; visibility:hidden; transition:opacity .2s, visibility .2s; }
+.modal.open{ opacity:1; visibility:visible; }
+.modal-card{ width:100%; max-width:400px; background:var(--card); border-radius:var(--radius-card); padding:28px 26px 22px; box-shadow:0 24px 60px rgba(0,0,0,0.22);
+  transform:translateY(8px) scale(0.98); transition:transform .22s cubic-bezier(.2,.9,.3,1); }
+.modal.open .modal-card{ transform:none; }
+.modal-card h3{ font-size:20px; font-weight:700; letter-spacing:-0.3px; line-height:1.2; }
+.modal-card p{ margin-top:8px; font-size:14px; line-height:1.5; color:var(--ink-2); }
+.modal-actions{ margin-top:22px; display:flex; flex-direction:column; gap:8px; }
+.modal-actions button{ height:46px; border-radius:999px; border:none; cursor:pointer; font-family:var(--font); font-size:14.500px; font-weight:600; transition:background .15s, transform .1s; }
+.modal-actions button:active{ transform:scale(0.99); }
+.m-primary{ background:var(--blue); color:#fff; } .m-primary:hover{ background:var(--blue-hover); }
+.m-danger{ background:#fff; color:#d70015; border:1px solid var(--line-soft)!important; } .m-danger:hover{ background:#fff5f5; }
+.m-plain{ background:none; color:var(--ink-2); } .m-plain:hover{ color:var(--ink); }
+
 @media (max-width:980px){
   .app{ grid-template-columns:1fr; }
   .bar{ padding:0 16px; }
@@ -134,7 +150,7 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 <div class="app">
 
   <header class="bar">
-    <a href="panel.html" class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Volver<span class="long">&nbsp;al panel</span></a>
+    <a href="panel.html#eventos" class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>Volver<span class="long"> al panel</span></span></a>
     <div class="bar-title"><b>Crear evento</b><span>Asistente de DarkerPass</span></div>
     <button class="sum-toggle" id="sum-toggle">Resumen&nbsp;<span id="sum-count">0/12</span></button>
   </header>
@@ -175,6 +191,18 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 </div>
 
 <div class="scrim" id="scrim"></div>
+<!-- Al salir con progreso: guardar como borrador o descartar -->
+<div class="modal" id="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exit-title">
+  <div class="modal-card">
+    <h3 id="exit-title">¿Guardar como borrador?</h3>
+    <p>Todavía no terminas de crear este evento. Puedes guardarlo y continuar después desde «Eventos», o descartar lo que llevas.</p>
+    <div class="modal-actions">
+      <button class="m-primary" id="exit-save">Guardar borrador</button>
+      <button class="m-danger" id="exit-discard">Descartar</button>
+      <button class="m-plain" id="exit-cancel">Seguir creando</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -220,7 +248,7 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
       chips: ['Subir flyer'] }
   ];
   var CAMPOS = PASOS.filter(function(p){ return !p.file; });
-  var paso = -1, flyerUrl = '';
+  var paso = -1, flyerUrl = '', flyerNombre = '';
 
   /* ── Resumen ── */
   var CHECK = '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
@@ -273,6 +301,11 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
     bajar();
   }
 
+  function mostrarFlyer(){
+    $('flyer-box').classList.add('has'); $('flyer-box').innerHTML = '<img alt="Flyer">'; $('flyer-box').querySelector('img').src = flyerUrl;
+    $('flyer-txt').textContent = flyerNombre || 'Flyer cargado';
+  }
+
   /* ── Flujo ── */
   function siguiente(){
     paso++;
@@ -309,10 +342,11 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   $('attach').addEventListener('click', function(){ $('file').click(); });
   $('file').addEventListener('change', function(){
     var f = this.files && this.files[0]; if (!f) return;
-    flyerUrl = URL.createObjectURL(f);
+    flyerUrl = URL.createObjectURL(f); flyerNombre = f.name;
     imagen(flyerUrl);
-    $('flyer-box').classList.add('has'); $('flyer-box').innerHTML = '<img alt="Flyer">'; $('flyer-box').querySelector('img').src = flyerUrl;
-    $('flyer-txt').textContent = f.name;
+    mostrarFlyer();
+    // Copia en texto para poder guardarla dentro del borrador
+    var lector = new FileReader(); lector.onload = function(){ flyerUrl = lector.result; }; lector.readAsDataURL(f);
     this.value = '';
     if (PASOS[paso] && PASOS[paso].file) siguiente();
     else { pintarResumen(); escribir('Flyer recibido, ya lo tengo guardado. Sigamos.'); }
@@ -327,6 +361,46 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   function hoja(abrir){ $('summary').classList.toggle('open', abrir); $('scrim').classList.toggle('open', abrir); }
   $('sum-toggle').addEventListener('click', function(){ hoja(!$('summary').classList.contains('open')); });
   $('scrim').addEventListener('click', function(){ hoja(false); });
+
+  /* ── Borradores ──
+     CONEXIÓN: en esta versión visual los borradores se guardan en este navegador
+     (localStorage). Con el backend se guardarán en la cuenta del organizador. */
+  var CLAVE = 'dp_borradores';
+  function leer(){ try { return JSON.parse(localStorage.getItem(CLAVE)) || []; } catch (e) { return []; } }
+  function escribirLista(l){ localStorage.setItem(CLAVE, JSON.stringify(l)); }
+  var borradorId = new URLSearchParams(window.location.search).get('borrador') || '';
+  function hechos(){ return PASOS.filter(function(p){ return p.file ? flyerUrl : A[p.key]; }).length; }
+  function guardarBorrador(){
+    var lista = leer().filter(function(b){ return b.id !== borradorId; });
+    var b = { id: borradorId || 'b' + Date.now(), nombre: A.nombre || '', respuestas: A, flyer: flyerUrl, flyerNombre: flyerNombre,
+              hechos: hechos(), total: PASOS.length, actualizado: new Date().toISOString() };
+    lista.unshift(b);
+    try { escribirLista(lista); }
+    catch (e) { b.flyer = ''; b.flyerNombre = ''; b.hechos = Math.max(0, b.hechos - (flyerUrl ? 1 : 0)); escribirLista(lista); }  // imagen demasiado pesada: se guarda sin flyer
+  }
+  function descartarBorrador(){ if (borradorId) escribirLista(leer().filter(function(b){ return b.id !== borradorId; })); }
+
+  // "Volver": si hay progreso, pregunta antes de salir
+  var modal = $('exit-modal'), destino = $('back').getAttribute('href');
+  $('back').addEventListener('click', function(e){
+    if (hechos() === 0) return;
+    e.preventDefault(); modal.classList.add('open'); $('exit-save').focus();
+  });
+  $('exit-save').addEventListener('click', function(){ guardarBorrador(); window.location.href = destino; });
+  $('exit-discard').addEventListener('click', function(){ descartarBorrador(); window.location.href = destino; });
+  $('exit-cancel').addEventListener('click', function(){ modal.classList.remove('open'); input.focus(); });
+  modal.addEventListener('click', function(e){ if (e.target === modal) modal.classList.remove('open'); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') modal.classList.remove('open'); });
+
+  // Si se abrió un borrador, se recupera la conversación y se continúa donde quedó
+  var previo = borradorId && leer().filter(function(b){ return b.id === borradorId; })[0];
+  if (previo) {
+    A = previo.respuestas || {}; flyerUrl = previo.flyer || ''; flyerNombre = previo.flyerNombre || '';
+    if (flyerUrl) mostrarFlyer();
+    var i = 0;
+    while (i < PASOS.length && !PASOS[i].file && A[PASOS[i].key]) { burbuja('ai', PASOS[i].ask()); burbuja('me', A[PASOS[i].key]); i++; }
+    paso = i - 1;
+  } else { borradorId = ''; }
 
   pintarResumen();
   siguiente();
