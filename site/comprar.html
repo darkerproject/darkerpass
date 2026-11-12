@@ -273,7 +273,7 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   </span>
 </div>
 
-<a href="busqueda.html" class="page-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Volver</a>
+<a href="index.html" class="page-back" id="page-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Volver</a>
 
 <div class="page-frame">
   <div class="content">
@@ -454,6 +454,15 @@ hamburger.addEventListener('click', function() {
     navOverlay.classList.remove('open');
   } else {
     navOverlay.classList.toggle('open', open);
+  }
+});
+// "Volver": regresa a la página desde la que se llegó (home o búsqueda).
+// Si se entró directo a comprar.html (sin página anterior del sitio), va a la home.
+document.getElementById('page-back').addEventListener('click', function(e) {
+  var ref = document.referrer;
+  if (ref && ref.indexOf(window.location.origin + '/') === 0 && window.history.length > 1) {
+    e.preventDefault();
+    window.history.back();
   }
 });
 navOverlay.querySelectorAll('a').forEach(function(a) {
