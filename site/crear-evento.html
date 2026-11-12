@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crear evento · DarkerPass</title>
+<style>
+*,*::before,*::after{ margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --blue:#0057FF; --blue-hover:#3375FF; --blue-press:#0048d6;
+  --bg:#f5f5f7; --card:#ffffff;
+  --ink:#1d1d1f; --ink-2:#6e6e73; --ink-3:#86868b;
+  --line:#d2d2d7; --line-soft:#e8e8ed;
+  --radius-card:22px;
+  --shadow:0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; height:100%; }
+body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:100%; overflow:hidden; }
+
+/* ── Pantalla completa: barra superior + chat + resumen ── */
+.app{ height:100vh; height:100dvh; display:grid; grid-template-rows:64px 1fr; grid-template-columns:1fr 400px; }
+
+.bar{ grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 28px; border-bottom:1px solid var(--line-soft); background:var(--card); }
+.back{ display:inline-flex; align-items:center; gap:6px; color:var(--ink-2); text-decoration:none; font-size:14px; font-weight:500; transition:color .2s; }
+.back:hover{ color:var(--ink); }
+.back svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; }
+.bar-title{ position:absolute; left:50%; transform:translateX(-50%); text-align:center; line-height:1.25; }
+.bar-title b{ display:block; font-size:15px; font-weight:700; letter-spacing:-0.2px; }
+.bar-title span{ font-size:12px; color:var(--ink-3); }
+.sum-toggle{ display:none; height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--line-soft); background:var(--card); cursor:pointer;
+  font-family:var(--font); font-size:13px; font-weight:500; color:var(--ink); }
+
+/* ── Chat ── */
+.chat{ min-width:0; min-height:0; display:flex; flex-direction:column; }
+.thread{ flex:1; min-height:0; overflow-y:auto; padding:32px 24px 12px; scroll-behavior:smooth; }
+.thread-in{ max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+
+.msg{ display:flex; gap:12px; align-items:flex-end; max-width:86%; animation:rise .32s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+.msg .bot{ flex:0 0 auto; width:32px; height:32px; border-radius:50%; background:var(--blue); display:flex; align-items:center; justify-content:center; }
+.msg .bot svg{ width:16px; height:16px; fill:#fff; }
+.bubble{ padding:13px 17px; border-radius:20px; font-size:15px; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere; }
+.msg.ai .bubble{ background:var(--card); color:var(--ink); border-bottom-left-radius:6px; box-shadow:var(--shadow); }
+.msg.me{ align-self:flex-end; }
+.msg.me .bubble{ background:var(--blue); color:#fff; border-bottom-right-radius:6px; }
+.msg.me .bubble.img{ padding:6px; background:var(--card); box-shadow:var(--shadow); }
+.bubble.img img{ display:block; width:180px; aspect-ratio:4/5; object-fit:cover; border-radius:15px; }
+.typing{ display:flex; gap:5px; padding:4px 2px; }
+.typing i{ width:7px; height:7px; border-radius:50%; background:var(--ink-3); animation:blink 1.1s infinite ease-in-out; }
+.typing i:nth-child(2){ animation-delay:.15s; } .typing i:nth-child(3){ animation-delay:.3s; }
+@keyframes blink{ 0%,80%,100%{ opacity:.25; transform:translateY(0); } 40%{ opacity:1; transform:translateY(-3px); } }
+
+/* Respuestas rápidas */
+.chips{ max-width:720px; width:100%; margin:0 auto; padding:4px 24px 0; display:flex; flex-wrap:wrap; gap:8px; min-height:0; }
+.chips button{ height:36px; padding:0 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer;
+  font-family:var(--font); font-size:13.5px; font-weight:500; color:var(--blue); transition:background .15s, border-color .15s; animation:rise .3s both; }
+.chips button:hover{ background:rgba(0,87,255,0.05); border-color:var(--blue); }
+
+/* Caja de escritura */
+.composer-wrap{ padding:14px 24px 16px; }
+.composer{ max-width:720px; margin:0 auto; display:flex; align-items:flex-end; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line-soft); border-radius:28px;
+  box-shadow:var(--shadow); transition:border-color .2s, box-shadow .2s; }
+.composer:focus-within{ border-color:var(--blue); box-shadow:0 0 0 4px rgba(0,87,255,0.10), var(--shadow); }
+.composer textarea{ flex:1; min-width:0; border:none; outline:none; resize:none; background:none; font-family:var(--font); font-size:15px; line-height:1.45; color:var(--ink);
+  padding:9px 6px; max-height:132px; }
+.composer textarea::placeholder{ color:var(--ink-3); }
+.icon-btn{ flex:0 0 auto; width:40px; height:40px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s, transform .1s, opacity .2s; }
+.icon-btn:active{ transform:scale(0.94); }
+.attach{ background:none; } .attach:hover{ background:var(--bg); }
+.attach svg{ width:20px; height:20px; fill:none; stroke:var(--ink-2); stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.send{ background:var(--blue); } .send:hover{ background:var(--blue-hover); }
+.send:disabled{ opacity:.35; cursor:default; }
+.send svg{ width:18px; height:18px; fill:none; stroke:#fff; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.demo-note{ max-width:720px; margin:10px auto 0; text-align:center; font-size:11.5px; color:var(--ink-3); }
+
+/* ── Resumen del evento (se llena mientras conversas) ── */
+.summary{ min-height:0; overflow-y:auto; background:var(--card); border-left:1px solid var(--line-soft); padding:28px 26px 26px; display:flex; flex-direction:column; }
+.eyebrow{ display:block; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px; }
+.summary h2{ font-size:23px; font-weight:700; letter-spacing:-0.4px; line-height:1.15; }
+.progress{ margin-top:14px; }
+.progress .row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--ink-2); margin-bottom:7px; }
+.progress .bar-p{ height:6px; border-radius:3px; background:#ececf0; overflow:hidden; }
+.progress .bar-p i{ display:block; height:100%; width:0; border-radius:3px; background:var(--blue); transition:width .4s ease; }
+
+.flyer{ margin-top:22px; display:flex; gap:16px; align-items:center; }
+.flyer-box{ flex:0 0 auto; width:96px; aspect-ratio:4/5; border-radius:14px; overflow:hidden; border:1.5px dashed var(--line); display:flex; align-items:center; justify-content:center; background:var(--bg); }
+.flyer-box svg{ width:22px; height:22px; fill:none; stroke:var(--ink-3); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.flyer-box.has{ border:none; } .flyer-box img{ width:100%; height:100%; object-fit:cover; display:block; }
+.flyer b{ display:block; font-size:14px; font-weight:600; }
+.flyer span{ display:block; margin-top:3px; font-size:12.5px; line-height:1.45; color:var(--ink-2); }
+
+.fields{ margin-top:20px; }
+.f{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line-soft); }
+.f .dot{ flex:0 0 auto; width:18px; height:18px; margin-top:1px; border-radius:50%; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; transition:background .25s, border-color .25s; }
+.f .dot svg{ width:10px; height:10px; fill:none; stroke:#fff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+.f.done .dot{ background:var(--blue); border-color:var(--blue); } .f.done .dot svg{ opacity:1; }
+.f .k{ font-size:12px; font-weight:600; color:var(--ink-3); }
+.f .v{ margin-top:2px; font-size:14px; line-height:1.45; color:var(--ink-3); overflow-wrap:anywhere; }
+.f.done .v{ color:var(--ink); }
+.f.now .k{ color:var(--blue); }
+
+.publish{ margin-top:auto; padding-top:22px; }
+.btn{ width:100%; height:48px; border-radius:999px; border:none; cursor:pointer; background:var(--blue); color:#fff; font-family:var(--font); font-size:15px; font-weight:600;
+  box-shadow:0 2px 8px rgba(0,87,255,0.25); transition:background .18s, transform .1s, opacity .2s; }
+.btn:hover{ background:var(--blue-hover); } .btn:active{ transform:scale(0.99); }
+.btn:disabled{ opacity:.35; cursor:default; box-shadow:none; }
+.publish p{ margin-top:10px; text-align:center; font-size:12px; line-height:1.45; color:var(--ink-3); }
+
+.toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,12px); padding:11px 18px; border-radius:999px; background:var(--ink); color:#fff; font-size:13px; font-weight:500;
+  opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:200; }
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+.scrim{ display:none; }
+
+@media (max-width:980px){
+  .app{ grid-template-columns:1fr; }
+  .bar{ padding:0 16px; }
+  .bar-title span, .back .long{ display:none; }
+  .sum-toggle{ display:inline-flex; align-items:center; }
+  .thread{ padding:22px 16px 10px; } .chips{ padding:4px 16px 0; } .composer-wrap{ padding:12px 16px 14px; }
+  .msg{ max-width:92%; }
+  /* El resumen se abre como hoja desde abajo */
+  .summary{ position:fixed; left:0; right:0; bottom:0; max-height:82vh; z-index:120; border-left:none; border-radius:24px 24px 0 0; padding:24px 20px 22px;
+    transform:translateY(105%); transition:transform .32s cubic-bezier(.2,.9,.3,1); box-shadow:0 -12px 40px rgba(0,0,0,0.18); }
+  .summary.open{ transform:none; }
+  .scrim{ display:block; position:fixed; inset:0; z-index:110; background:rgba(0,0,0,0.32); opacity:0; pointer-events:none; transition:opacity .25s; }
+  .scrim.open{ opacity:1; pointer-events:auto; }
+}
+@media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } .thread{ scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="bar">
+    <a href="panel.html" class="back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Volver<span class="long">&nbsp;al panel</span></a>
+    <div class="bar-title"><b>Crear evento</b><span>Asistente de DarkerPass</span></div>
+    <button class="sum-toggle" id="sum-toggle">Resumen&nbsp;<span id="sum-count">0/12</span></button>
+  </header>
+
+  <!-- CHAT -->
+  <main class="chat">
+    <div class="thread" id="thread"><div class="thread-in" id="msgs"></div></div>
+    <div class="chips" id="chips"></div>
+    <div class="composer-wrap">
+      <form class="composer" id="composer">
+        <button type="button" class="icon-btn attach" id="attach" aria-label="Adjuntar flyer"><svg viewBox="0 0 24 24"><path d="M20 11.500l-7.800 7.800a5 5 0 0 1-7.100-7.100l8.200-8.200a3.400 3.400 0 0 1 4.800 4.800l-8.200 8.200a1.700 1.700 0 0 1-2.400-2.400l7.500-7.500"/></svg></button>
+        <input type="file" id="file" accept="image/*" hidden>
+        <textarea id="input" rows="1" placeholder="Escribe tu respuesta…" autocomplete="off"></textarea>
+        <button type="submit" class="icon-btn send" id="send" aria-label="Enviar" disabled><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+      </form>
+      <p class="demo-note">Demostración visual: el asistente todavía no está conectado y solo sigue un guion de ejemplo.</p>
+    </div>
+  </main>
+
+  <!-- RESUMEN -->
+  <aside class="summary" id="summary">
+    <span class="eyebrow">Tu evento</span>
+    <h2 id="sum-name">Evento nuevo</h2>
+    <div class="progress">
+      <div class="row"><span>Datos completados</span><span id="sum-count-2">0 de 12</span></div>
+      <div class="bar-p"><i id="sum-bar"></i></div>
+    </div>
+    <div class="flyer">
+      <div class="flyer-box" id="flyer-box"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.800"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg></div>
+      <div><b>Flyer</b><span id="flyer-txt">Pendiente. Lo subes en el mismo chat, en formato vertical 4:5.</span></div>
+    </div>
+    <div class="fields" id="fields"></div>
+    <div class="publish">
+      <button class="btn" id="publish" disabled>Publicar evento</button>
+      <p id="publish-note">Se activa cuando el asistente tenga todos los datos.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var msgs = $('msgs'), thread = $('thread'), chips = $('chips'), input = $('input'), send = $('send');
+
+  /* ─────────────────────────────────────────────────────────────────────
+     GUION DE EJEMPLO
+     CONEXIÓN: aquí irá la IA conversacional. Este guion fijo solo sirve
+     para ver cómo luce la interfaz: hace una pregunta por dato y guarda
+     lo que el productor escribe, tal cual, en el resumen de la derecha.
+     Cada dato indica a qué columna del Sheet corresponde.
+     ───────────────────────────────────────────────────────────────────── */
+  var A = {};   // respuestas
+  var PASOS = [
+    { key: 'resena',  label: 'De qué trata',            /* reseña (columna nueva) */
+      ask: function(){ return 'Hola, Omar. Soy el asistente de DarkerPass y voy a ayudarte a crear tu evento conversando, sin formularios.\n\nPara empezar, cuéntame: ¿de qué trata tu evento? La temática, el ambiente o la historia que hay detrás.'; } },
+    { key: 'nombre',  label: 'Nombre del evento',       /* col. A */
+      ask: function(){ return 'Suena muy bien. ¿Qué nombre le ponemos al evento?'; } },
+    { key: 'fecha',   label: 'Fecha',                   /* col. C */
+      ask: function(){ return 'Anotado: «' + A.nombre + '». ¿Qué día será?'; } },
+    { key: 'hora',    label: 'Hora',                    /* col. D */
+      ask: function(){ return '¿A qué hora abren puertas?'; } },
+    { key: 'lugar',   label: 'Lugar',                   /* col. B */
+      ask: function(){ return '¿Dónde será? Dime el nombre del local y, si la tienes, la dirección.'; } },
+    { key: 'aforo',   label: 'Aforo',                   /* tope de aforo (columna nueva) */
+      ask: function(){ return '¿Cuál es el aforo? Con eso controlo cuántas entradas quedan disponibles.'; } },
+    { key: 'entradas',label: 'Tipos de entrada y precios', /* col. F, G, H */
+      ask: function(){ return 'Ahora las entradas. ¿Qué tipos vas a vender y a qué precio?\n\nPor ejemplo: «Preventa a 35, general a 50 y general con bebida a 65».'; } },
+    { key: 'artistas',label: 'Artistas',                /* col. J */
+      ask: function(){ return '¿Qué artistas o bandas se presentan? Escríbelos separados por comas.'; } },
+    { key: 'eleccion',label: 'Elección de artista',     /* col. M */
+      ask: function(){ return '¿Quieres que cada comprador elija por cuál artista viene? Sirve para repartir las entradas vendidas a nombre de cada banda.'; },
+      chips: ['Sí, eligen una banda', 'Sí, con opción «Voy por todas»', 'No hace falta'] },
+    { key: 'pagos',   label: 'Pago a los artistas',     /* BANDAS_CONFIG */
+      ask: function(){ return '¿Cómo le pagas a cada artista? Dime si es un monto fijo o un porcentaje de sus entradas, y cuánto.\n\nPor ejemplo: «Los Zafiros 30 %, Niebla fijo de 300 soles».'; },
+      chips: ['Lo defino después'] },
+    { key: 'cobro',   label: 'Yape o Plin para el cobro', /* columnas por definir */
+      ask: function(){ return '¿A qué número de Yape o Plin te pagarán los compradores, y a nombre de quién está?'; } },
+    { key: 'flyer',   label: 'Flyer', file: true,       /* col. I */
+      ask: function(){ return 'Último paso: sube el flyer del evento con el clip de abajo. Lo ideal es una imagen vertical en proporción 4:5.'; },
+      chips: ['Subir flyer'] }
+  ];
+  var CAMPOS = PASOS.filter(function(p){ return !p.file; });
+  var paso = -1, flyerUrl = '';
+
+  /* ── Resumen ── */
+  var CHECK = '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';
+  function pintarResumen(){
+    $('fields').innerHTML = '';
+    CAMPOS.forEach(function(p){
+      var d = document.createElement('div');
+      d.className = 'f' + (A[p.key] ? ' done' : '') + (PASOS[paso] === p ? ' now' : '');
+      d.innerHTML = '<span class="dot">' + CHECK + '</span><div><div class="k"></div><div class="v"></div></div>';
+      d.querySelector('.k').textContent = p.label;
+      d.querySelector('.v').textContent = A[p.key] || 'Pendiente';
+      $('fields').appendChild(d);
+    });
+    var hechos = PASOS.filter(function(p){ return p.file ? flyerUrl : A[p.key]; }).length, total = PASOS.length;
+    $('sum-count').textContent = hechos + '/' + total;
+    $('sum-count-2').textContent = hechos + ' de ' + total;
+    $('sum-bar').style.width = (hechos / total * 100) + '%';
+    $('sum-name').textContent = A.nombre || 'Evento nuevo';
+    $('publish').disabled = hechos < total;
+    $('publish-note').textContent = hechos < total ? 'Se activa cuando el asistente tenga todos los datos.' : 'Revisa el resumen. Si algo está mal, díselo al asistente.';
+  }
+
+  /* ── Mensajes ── */
+  var BOT = '<span class="bot"><svg viewBox="0 0 24 24"><path d="M12 2l1.900 6.100L20 10l-6.100 1.900L12 18l-1.900-6.100L4 10l6.100-1.900z"/><path d="M19 15l.800 2.200L22 18l-2.200.800L19 21l-.800-2.200L16 18l2.200-.800z"/></svg></span>';
+  function bajar(){ thread.scrollTop = thread.scrollHeight; }
+  function burbuja(quien, texto){
+    var m = document.createElement('div'); m.className = 'msg ' + quien;
+    m.innerHTML = (quien === 'ai' ? BOT : '') + '<div class="bubble"></div>';
+    m.querySelector('.bubble').textContent = texto;
+    msgs.appendChild(m); bajar(); return m;
+  }
+  function imagen(url){
+    var m = document.createElement('div'); m.className = 'msg me';
+    m.innerHTML = '<div class="bubble img"><img alt="Flyer del evento"></div>';
+    m.querySelector('img').src = url; msgs.appendChild(m); bajar();
+  }
+  function escribir(texto, despues){
+    var m = document.createElement('div'); m.className = 'msg ai';
+    m.innerHTML = BOT + '<div class="bubble"><div class="typing"><i></i><i></i><i></i></div></div>';
+    msgs.appendChild(m); bajar();
+    setTimeout(function(){ m.querySelector('.bubble').textContent = texto; bajar(); if (despues) despues(); }, 850);
+  }
+  function ponerChips(lista){
+    chips.innerHTML = '';
+    (lista || []).forEach(function(t){
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = t;
+      b.addEventListener('click', function(){ if (t === 'Subir flyer') $('file').click(); else responder(t); });
+      chips.appendChild(b);
+    });
+    bajar();
+  }
+
+  /* ── Flujo ── */
+  function siguiente(){
+    paso++;
+    while (PASOS[paso] && PASOS[paso].file && flyerUrl) paso++;   // el flyer ya se subió antes
+    ponerChips([]);
+    if (paso >= PASOS.length) {
+      pintarResumen();
+      escribir('Listo, ya tengo todo. Revisa el resumen de «' + (A.nombre || 'tu evento') + '» y, si está correcto, presiona «Publicar evento». Si quieres cambiar algo, dímelo aquí mismo.');
+      return;
+    }
+    var p = PASOS[paso];
+    pintarResumen();
+    escribir(p.ask(), function(){ ponerChips(p.chips); });
+  }
+  function responder(texto){
+    texto = texto.trim(); if (!texto) return;
+    burbuja('me', texto);
+    input.value = ''; ajustar();
+    var p = PASOS[paso];
+    if (!p) { ponerChips([]); escribir('Anotado. Cuando el asistente esté conectado, aquí aplicará el cambio que pidas.'); return; }
+    if (p.file) { escribir('Para el flyer necesito la imagen. Tócale al clip que está junto a la caja de texto.', function(){ ponerChips(p.chips); }); return; }
+    A[p.key] = texto;
+    siguiente();
+  }
+
+  // Caja de escritura
+  function ajustar(){ input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 132) + 'px'; send.disabled = !input.value.trim(); }
+  input.addEventListener('input', ajustar);
+  input.addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); responder(input.value); } });
+  $('composer').addEventListener('submit', function(e){ e.preventDefault(); responder(input.value); });
+
+  // Flyer: se muestra en el chat y en el resumen.
+  // CONEXIÓN: aquí la imagen se subirá a Drive (carpeta DARKERPASS FLYERS) y su URL irá a la columna IMAGEN.
+  $('attach').addEventListener('click', function(){ $('file').click(); });
+  $('file').addEventListener('change', function(){
+    var f = this.files && this.files[0]; if (!f) return;
+    flyerUrl = URL.createObjectURL(f);
+    imagen(flyerUrl);
+    $('flyer-box').classList.add('has'); $('flyer-box').innerHTML = '<img alt="Flyer">'; $('flyer-box').querySelector('img').src = flyerUrl;
+    $('flyer-txt').textContent = f.name;
+    this.value = '';
+    if (PASOS[paso] && PASOS[paso].file) siguiente();
+    else { pintarResumen(); escribir('Flyer recibido, ya lo tengo guardado. Sigamos.'); }
+  });
+
+  // Publicar
+  function toast(msg){ var t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('show'); }, 2200); }
+  // CONEXIÓN: aquí se enviará el evento al CMS (DARKERPASS CMS), que crea la pestaña y copia a EVENTOS_CONFIG.
+  $('publish').addEventListener('click', function(){ toast('Publicar: se conectará al sistema más adelante'); });
+
+  // Resumen en móvil (hoja inferior)
+  function hoja(abrir){ $('summary').classList.toggle('open', abrir); $('scrim').classList.toggle('open', abrir); }
+  $('sum-toggle').addEventListener('click', function(){ hoja(!$('summary').classList.contains('open')); });
+  $('scrim').addEventListener('click', function(){ hoja(false); });
+
+  pintarResumen();
+  siguiente();
+  input.focus();
+})();
+</script>
+
+</body>
+</html>
