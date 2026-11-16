@@ -413,3 +413,16 @@ Decisiones tomadas con Omar. Mandan sobre lo que digan las secciones anteriores 
 - Confirmar la columna de aforo.
 - Pasar a Vercel Pro antes del lanzamiento con pagos reales.
 - Definir cómo y cuándo se le liquida a cada productor, y la política de devoluciones.
+
+### 11.8 Backend escrito (16 de noviembre de 2026, sin instalar todavía)
+
+- **Código:** `backend/api/Codigo.gs` (proyecto nuevo "DarkerPass API"). Pasos de instalación y el cambio del `Code.gs` existente: `backend/INSTALAR.md`. Simulación local: `node backend/pruebas/simular.js`.
+- **`backend/` no se publica:** Vercel usa `site/` como Root Directory.
+- **API, una sola URL:** `GET ?action=eventos | evento&id= | buscar&q=`; `POST {accion:"pagar"}`, `POST {accion:"emitir", orden}`, y el aviso de Mercado Pago (evento Order).
+- **Flujo de una compra:** el backend valida, toma el precio de `EVENTOS_CONFIG`, bloquea, revisa aforo, crea la orden en Mercado Pago (`POST /v1/orders`, modo `automatic`) y, si queda `processed` / `accredited`, escribe la fila A–H con L = `PAGADO`. Luego pide el ticket al `Code.gs` existente por su `doPost`, que lo emite y deja L = `Sí`.
+- **Conexión con el `Code.gs` existente:** se le agrega `emitirTicket_(evento, fila)` (el cuerpo de `ap_aprobarRegistro`) y un `doPost` protegido con la propiedad `CLAVE_TICKETS`. `doGet` no se toca. Ese proyecto tiene dos implementaciones publicadas y hay que actualizar ambas.
+- **Columnas para compras web:** G = ID de la orden de Mercado Pago, H = `SI`. El DNI se escribe como texto para conservar ceros a la izquierda.
+- **Si el ticket falla,** la fila queda en `PAGADO` y aparece en AprobarCompras, desde donde se puede enviar a mano.
+- **Sin instalar ni probar contra Google ni Mercado Pago reales.** Solo pasó la simulación local.
+- **Por confirmar con Omar:** el texto de `TIPO_ENTRADA` (hoy `Preventa`, `General`, `General + bebida`), la columna de aforo (`COL.AFORO`, hoy desactivada) y el valor `SI_TODAS` en `SELECCION_ARTISTA` para la opción "Todas las bandas".
+- **Problemas conocidos del sistema existente, sin resolver:** el QR es un enlace público que valida al abrirse (el comprador puede quemar su entrada si lo escanea el día del evento); el QR identifica por nombre + DNI + tipo, sin código único; los PIN están escritos en el `Code.gs`; Gmail gratuito envía unos 100 correos al día.
