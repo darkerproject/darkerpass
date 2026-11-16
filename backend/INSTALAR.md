@@ -178,6 +178,75 @@ function doPost(e) {
     return salida({ ok: false, error: 'error_interno' });
   }
 }
+
+/* ---------- REINTENTO AUTOMÁTICO: compras pagadas cuyo ticket no salió ---------- */
+
+// Revisa los eventos vigentes y envía el ticket de toda fila que siga en "PAGADO".
+// Corre sola cada 15 minutos (ver CREATE_REINTENTO_TRIGGER_ONCE). También se puede ejecutar a mano.
+function reintentarTicketsPagados() {
+  var MAX_POR_VUELTA = 10;                 // para no pasarse del tiempo de ejecución
+  var ESPERA_MIN = 3;                      // deja que el envío normal termine antes de reintentar
+  var AVISAR_HORAS = 24;                   // pasado este tiempo, deja de insistir y te avisa
+  var ADMIN = 'darkerproject.pe@gmail.com';
+
+  if (MailApp.getRemainingDailyQuota() < 1) return;   // sin cupo de correos hoy: se intenta en la próxima vuelta
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return;         // hay otro envío en curso
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var cfg = ss.getSheetByName('EVENTOS_CONFIG');
+    if (!cfg || cfg.getLastRow() < 2) return;
+    var filasCfg = cfg.getRange(2, 1, cfg.getLastRow() - 1, 3).getValues();   // A:C
+    var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    var ahora = Date.now(), enviados = 0;
+
+    for (var i = 0; i < filasCfg.length && enviados < MAX_POR_VUELTA; i++) {
+      var nombre = (filasCfg[i][0] || '').toString().trim();
+      if (!nombre) continue;
+      var fecha = filasCfg[i][2];
+      if (fecha instanceof Date) { var f = new Date(fecha); f.setHours(0, 0, 0, 0); if (f < hoy) continue; }   // evento pasado
+
+      var hoja = ss.getSheetByName(nombre);
+      if (!hoja || hoja.getLastRow() < 2) continue;
+      var datos = hoja.getRange(2, 12, hoja.getLastRow() - 1, 2).getValues();   // L (estado) y M (fecha)
+
+      for (var r = 0; r < datos.length && enviados < MAX_POR_VUELTA; r++) {
+        if ((datos[r][0] || '').toString().trim() !== 'PAGADO') continue;
+        var desde = datos[r][1] instanceof Date ? datos[r][1].getTime() : 0;
+        if (desde && ahora - desde < ESPERA_MIN * 60000) continue;
+
+        var fila = r + 2;
+        var res = emitirTicket_(nombre, fila);
+        if (res && res.success) { enviados++; continue; }
+
+        // Sigue fallando después de AVISAR_HORAS: se marca para revisión y se te avisa una sola vez
+        if (desde && ahora - desde > AVISAR_HORAS * 3600000) {
+          hoja.getRange(fila, 12).setValue('PAGADO - REVISAR');
+          try {
+            MailApp.sendEmail(ADMIN, 'DarkerPass: un ticket pagado no se pudo enviar',
+              'Evento: ' + nombre + '\nFila: ' + fila + '\nMotivo: ' + ((res && res.message) || 'desconocido') +
+              '\n\nLa compra está pagada. Revisa el correo del comprador en el Sheet y, una vez corregido, ' +
+              'cambia la columna L de esa fila a PAGADO para que el sistema vuelva a intentarlo.');
+          } catch (e) { Logger.log('No se pudo avisar: ' + e); }
+        }
+      }
+    }
+    if (enviados) Logger.log('Reintento: ' + enviados + ' ticket(s) enviados');
+  } catch (err) {
+    Logger.log('reintentarTicketsPagados error: ' + err);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Ejecútala UNA sola vez desde el editor para activar el reintento cada 15 minutos.
+function CREATE_REINTENTO_TRIGGER_ONCE() {
+  var ya = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'reintentarTicketsPagados'; });
+  if (ya) { Logger.log('El reintento ya estaba activado.'); return; }
+  ScriptApp.newTrigger('reintentarTicketsPagados').timeBased().everyMinutes(15).create();
+  Logger.log('Reintento activado: cada 15 minutos.');
+}
 ```
 
 Qué cambia respecto a hoy:
@@ -185,6 +254,8 @@ Qué cambia respecto a hoy:
 - `ap_aprobarRegistro` hace exactamente lo mismo, pero el trabajo vive en `emitirTicket_`.
 - El correo ya no trae el enlace "Descargar imagen (PNG)". El PDF adjunto y su enlace siguen igual.
 - Hay un `doPost` nuevo. `doGet` no se toca.
+- Hay un reintento automático (`reintentarTicketsPagados`): si el correo de una compra pagada falla, el sistema lo vuelve a enviar solo. Se activa en el paso A4.
+- AprobarCompras no se borra ni se modifica. Queda sin uso para las compras web.
 
 ### A2. Crear la clave compartida
 
@@ -205,9 +276,19 @@ Para cada una: **Implementar** → **Administrar implementaciones** → lápiz d
 
 Google te va a pedir autorizar permisos nuevos; acepta.
 
-### A4. Comprobar que no se rompió nada
+### A4. Activar el reintento automático
 
-Abre AprobarCompras y aprueba un registro de prueba en un evento de prueba. Debe llegar el correo con el ticket, igual que siempre y sin el enlace PNG.
+En el editor, elige la función `CREATE_REINTENTO_TRIGGER_ONCE` en la barra superior → **Ejecutar**. Hazlo una sola vez. El registro debe decir "Reintento activado: cada 15 minutos".
+
+Qué hace desde ese momento, sin que intervengas:
+
+- Cada 15 minutos busca, en los eventos vigentes, compras que sigan en `PAGADO` (pagadas pero sin ticket) y les envía la entrada.
+- Si Gmail ya no tiene cupo de correos ese día (el límite gratuito es de unos 100), espera y lo intenta en la siguiente vuelta.
+- Si una compra sigue fallando después de 24 horas, casi siempre por un correo mal escrito, la marca como `PAGADO - REVISAR` y te manda un aviso. Corriges el correo en el Sheet, vuelves a poner `PAGADO` en la columna L y el sistema lo reintenta.
+
+### A5. Comprobar que no se rompió nada
+
+Las apps de staff y namesearch deben abrir igual que siempre. Si quieres probar el envío del ticket antes de instalar la Parte B, AprobarCompras sigue funcionando: aprueba un registro de prueba y debe llegar el correo, sin el enlace PNG.
 
 ---
 
