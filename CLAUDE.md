@@ -348,3 +348,68 @@ Por ahora este repo **no usa** imágenes de esta herramienta: el banner está em
 - Respeta al pie de la letra las proporciones que fija (ej. el flyer **siempre** 4:5). Si una restricción técnica choca con lo que pide, explícaselo antes de improvisar.
 - Prefiere lo minimalista y funcional por encima de lo decorativo.
 - No toques el Apps Script existente sin ver antes su `Code.gs`. Todo el sistema de QR, correos y aprobación depende de él.
+
+---
+
+## 11. Decisiones de backend (16 de noviembre de 2026)
+
+Decisiones tomadas con Omar. Mandan sobre lo que digan las secciones anteriores cuando haya diferencia (por ejemplo, el pago ya no es por Yape manual con número de operación y captura).
+
+### 11.1 El backend se queda en Google Apps Script
+
+- **Volumen esperado:** 70 a 80 entradas por evento, 100 como máximo, vendidas a lo largo de días o semanas. Apps Script alcanza de sobra.
+- No se usa Supabase ni servidor propio por ahora.
+- **Replantearlo si:** un evento pasa de unas 300 entradas, las preventas empiezan a agotarse en minutos, o muchos productores venden a la vez.
+- **Una sola URL de API:** el frontend habla con una única URL. Si algún día se migra de backend, solo cambia esa URL y las páginas siguen iguales.
+
+### 11.2 Requisitos del backend
+
+1. **Proyecto de Apps Script nuevo, separado del `Code.gs` existente.** Las apps actuales (AprobarCompras, staff_app) probablemente usan el `doGet` de ese proyecto y mezclarlas podría romperlas. El proyecto nuevo lee y escribe el MOTHER por su ID. Antes de definir cómo se conecta con el sistema actual (QR, correos), pedir a Omar su `Code.gs` y revisarlo.
+2. **Secretos en las propiedades del script:** el Access Token de Mercado Pago y la firma secreta del webhook. Nunca en el HTML, el repo ni los chats.
+3. **El monto lo calcula el backend** desde el precio del evento en `EVENTOS_CONFIG`. Nunca se confía en el monto que mande el navegador.
+4. **Cada pago se confirma consultando la orden a Mercado Pago** con el Access Token. Apps Script no puede leer las cabeceras de la petición, así que no puede validar la firma del webhook: al recibir un aviso, vuelve a consultar la orden y solo la da por pagada si Mercado Pago dice que está aprobada.
+5. **Escritura con `LockService`,** para que dos compras simultáneas no se pisen.
+6. **Aforo:** revisar las entradas disponibles dentro del mismo bloqueo, antes de confirmar la venta. El aforo todavía no tiene columna en el Sheet: dejar la lógica preparada y confirmar la columna con Omar antes de activarla.
+7. **Registro en la pestaña del evento:** solo se escribe, o se marca como pagado, cuando el pago está aprobado. Las columnas A–H siguen igual; la columna G (`PAGO`) guarda el ID de la orden o del pago de Mercado Pago en lugar del número de operación de Yape.
+8. **Webhook:** cuando exista la URL del Web App, Omar la configura en Mercado Pago → Configuración de webhooks, con el evento **Order (Mercado Pago)**. Opcionales: Contracargos y Reclamos.
+
+### 11.3 Velocidad: lo que el comprador sí siente
+
+- **Las imágenes no pasan por Apps Script.** Apps Script solo entrega la dirección del flyer; el navegador descarga la imagen directo y la guarda en caché.
+- **Datos de eventos con `CacheService`:** pedir datos a Apps Script tarda de 1 a 3 segundos. Guardar la respuesta unos minutos y entregarla sin leer el Sheet en cada visita. La caché se renueva sola al vencer.
+- **Mientras cargan los datos:** estado de carga limpio (card del flyer y campos en gris suave). No una página vacía ni datos de ejemplo.
+- **Al pagar:** crear la orden tarda de 2 a 4 segundos. El botón "Pagar" pasa a "Procesando pago…", desactivado, para que no se presione dos veces. (Ya está hecho en la versión visual de `comprar.html`.)
+
+### 11.4 Flyers en Google Drive
+
+- Se quedan en Drive por ahora (carpeta `DARKERPASS FLYERS`).
+- Drive no está hecho para servir imágenes a una web pública: a veces la primera carga es lenta o un enlace falla. Probarlo bien con flyers reales.
+- Si falla o tarda, avisar a Omar: el primer cambio sería mover solo los flyers a un almacenamiento de imágenes. El resto del backend puede seguir en Apps Script.
+
+### 11.5 Vercel
+
+- El plan gratis (Hobby) es solo para uso personal o no comercial, y vender entradas es comercial.
+- Para construir y probar, el plan gratis sirve.
+- **Antes de cobrar dinero real, Vercel debe pasar a plan Pro (US$20 al mes).** Recordárselo a Omar cuando se acerque el lanzamiento.
+
+### 11.6 Mercado Pago
+
+- **Producto:** Checkout API con la API de Orders (la API de Payments se va a descontinuar). El pago ocurre dentro de `comprar.html`, sin redirección.
+- **Medios de pago:** tarjetas de crédito y débito, y Yape. PagoEfectivo y PayCash quedan para después, como tercera pestaña, cuando el backend maneje pagos pendientes.
+- **Yape dentro de la página:** el comprador escribe su celular y el código de aprobación de 6 dígitos de su app; con eso se genera un token y se crea el pago. Documentación: https://www.mercadopago.com.pe/developers/en/docs/checkout-api/integration-configuration/yape
+- **Integración vía Orders (Perú):** https://www.mercadopago.com.pe/developers/en/docs/checkout-api-orders/integration-model
+- **Public Key de prueba:** `APP_USR-cdaf3a1a-5f36-4e31-8c8e-3b6a2e7b4703` (es pública; ya está en `comprar.html`).
+- **Comisión:** 3.49 % + S/ 1.00, con el dinero disponible al instante. No se cambia el plazo.
+- **La comisión la asume DarkerPass.** El comprador ve un precio fijo que ya la incluye; no se suma ningún "cargo por servicio".
+- **El dinero entra a la cuenta de Mercado Pago de Omar,** no al Yape de cada productor. Ya no hay número de operación, captura de pago ni aprobación manual para las compras web.
+- **Orden de pasos en la compra:** Datos → (Artista, si aplica) → Términos → Pago → Confirmación. Los términos van antes del pago.
+- **Pendiente técnico:** reemplazar los campos de tarjeta actuales de `comprar.html` por los campos seguros de MercadoPago.js, para que los datos de la tarjeta viajen directo a Mercado Pago. Hoy el pago está simulado.
+
+### 11.7 Pendientes de Omar
+
+- Pasar su `Code.gs`.
+- Anotar el ID de la aplicación de Mercado Pago.
+- Crear las cuentas de prueba (comprador y vendedor) en Mercado Pago.
+- Confirmar la columna de aforo.
+- Pasar a Vercel Pro antes del lanzamiento con pagos reales.
+- Definir cómo y cuándo se le liquida a cada productor, y la política de devoluciones.
