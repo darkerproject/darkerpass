@@ -132,15 +132,15 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 .progress .seg i.on{ background:var(--blue); }
 
 /* phase area — grid apilado: cada fase ocupa toda la celda (ancho y alto) */
-.phase-area{ position:relative; flex:1; display:grid; }
-.phase{ grid-area:1/1; padding:22px 30px 26px; display:flex; flex-direction:column;
+.phase-area{ position:relative; flex:1; min-height:0; display:grid; }
+.phase{ grid-area:1/1; min-height:0; padding:22px 30px 26px; display:flex; flex-direction:column;
   opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .38s ease, transform .38s ease, visibility .38s; pointer-events:none; }
 .phase.active{ opacity:1; visibility:visible; transform:none; pointer-events:auto; }
 
 .phase h2{ font-size:23px; font-weight:700; letter-spacing:-0.4px; line-height:1.12; margin-bottom:4px; }
 .phase .sub{ font-size:13.5px; color:var(--ink-2); line-height:1.5; margin-bottom:18px; }
 
-.body{ flex:1; }
+.body{ flex:1; min-height:0; overflow-y:auto; margin:0 -6px; padding:0 6px 6px; }
 
 /* fields */
 .field{ margin-bottom:13px; }
@@ -156,27 +156,30 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
 .field.invalid input{ border-color:#d70015; box-shadow:0 0 0 4px rgba(215,0,21,0.10); }
 .field.invalid .err{ display:block; }
 
-/* phase 2: pay block */
-.pay-block{ background:var(--field-bg); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:18px; }
-.pay-block .plabel{ font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-3); }
-.pay-num{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; }
-.pay-num .num{ font-size:28px; font-weight:700; letter-spacing:0.5px; color:var(--ink); font-variant-numeric:tabular-nums; }
-.copy-btn{ display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 14px; border:1px solid var(--line);
-  background:#fff; border-radius:999px; font-family:var(--font); font-size:13px; font-weight:500; color:var(--blue); cursor:pointer; transition:background .15s, transform .1s; }
-.copy-btn:hover{ background:#f5f5f7; } .copy-btn:active{ transform:scale(0.97); }
-.copy-btn svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7; }
-.pay-holder{ margin-top:12px; padding-top:12px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
-.pay-holder .k{ font-size:13px; color:var(--ink-2); } .pay-holder .v{ font-size:14px; font-weight:600; color:var(--ink); }
-.pay-method{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--blue); background:rgba(0,87,255,0.08); padding:4px 10px; border-radius:999px; }
-
-/* file upload */
-.upload{ display:flex; align-items:center; gap:12px; border:1.5px dashed var(--line); border-radius:var(--radius-field);
-  padding:13px 14px; cursor:pointer; transition:border-color .2s, background .2s; }
-.upload:hover{ border-color:var(--blue); background:rgba(0,87,255,0.03); }
-.upload svg{ width:20px; height:20px; fill:none; stroke:var(--ink-2); stroke-width:1.6; flex-shrink:0; }
-.upload .txt{ font-size:13.5px; color:var(--ink-2); } .upload .txt b{ color:var(--ink); font-weight:600; }
-.upload input{ display:none; }
-.optional{ font-size:11px; font-weight:600; color:var(--ink-3); text-transform:uppercase; letter-spacing:0.5px; margin-left:4px; }
+/* paso de pago */
+.phase h2.pay-title{ margin-bottom:10px; }
+.order{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 16px; margin-bottom:12px; background:var(--field-bg); border:1px solid var(--line); border-radius:14px; }
+.order .k{ font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:var(--ink-3); }
+.order .t{ margin-top:2px; font-size:14.5px; font-weight:600; color:var(--ink); }
+.order .p{ font-size:22px; font-weight:700; letter-spacing:-0.3px; color:var(--ink); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.pay-tabs{ display:flex; padding:3px; margin-bottom:12px; background:#e8e8ed; border-radius:999px; }
+.pay-tabs button{ flex:1; height:34px; border:none; background:none; border-radius:999px; cursor:pointer; font-family:var(--font); font-size:13.5px; font-weight:600; color:var(--ink-2); transition:background .2s, color .2s; }
+.pay-tabs button.on{ background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.10); }
+.pay-pane{ display:none; } .pay-pane.on{ display:block; }
+.pay-pane .field{ margin-bottom:10px; } .pay-pane .field label{ margin-bottom:5px; } .pay-pane .field input{ height:42px; }
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.pay-pane > .field:last-child, .pay-pane > .row2:last-child .field{ margin-bottom:0; }
+.field .hint{ font-size:12px; line-height:1.45; color:var(--ink-3); margin-top:6px; }
+.field.invalid .hint{ display:none; }
+.pay-error{ display:none; margin-bottom:12px; padding:11px 14px; border-radius:12px; background:rgba(215,0,21,0.06); border:1px solid rgba(215,0,21,0.25); font-size:13px; line-height:1.45; color:#b00012; }
+.pay-error.show{ display:block; }
+.pay-nav{ flex-direction:column; gap:8px; padding-top:8px; }
+.pay-nav .btn{ flex:0 0 48px; }
+.secure{ display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; color:var(--ink-3); }
+.secure svg{ width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.btn-primary:disabled{ opacity:.6; cursor:default; }
+.spin{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; animation:spin .7s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
 /* phase 3: terms */
 .terms-wrap{ position:relative; flex:1; min-height:0; margin-bottom:18px; }
@@ -199,7 +202,7 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
   border-radius:999px; text-decoration:none; align-self:center; }
 
 /* nav buttons */
-.nav{ display:flex; gap:12px; align-items:center; margin-top:auto; }
+.nav{ display:flex; gap:12px; align-items:center; margin-top:auto; padding-top:10px; flex-shrink:0; }
 .btn{ height:48px; border-radius:var(--radius-field); font-family:var(--font); font-size:15px; font-weight:600;
   cursor:pointer; border:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .18s, transform .1s, opacity .2s; }
 .btn-primary{ flex:1; width:100%; background:var(--blue); color:#fff; }
@@ -347,41 +350,10 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
           </div>
         </section>
 
-        <!-- PHASE 2: PAGO -->
+        <!-- PHASE 2: TERMINOS -->
         <section class="phase" data-phase="2">
-          <h2>Realiza tu pago</h2>
-          <p class="sub">Paga por Yape o Plin al número de abajo, a nombre del titular indicado. Luego confirma tu número de operación para continuar.</p>
-          <div class="body">
-            <div class="pay-block">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span class="plabel">Número para el pago</span>
-                <span class="pay-method">Yape / Plin</span>
-              </div>
-              <div class="pay-num">
-                <span class="num" id="pay-number">987 654 321</span>
-                <button class="copy-btn" id="copy-btn"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copiar</button>
-              </div>
-              <div class="pay-holder"><span class="k">Titular</span><span class="v" id="pay-holder">DarkerPass S.A.C.</span></div>
-            </div>
-            <div class="field"><label>Número de operación</label><input type="text" id="f-operacion" inputmode="numeric" placeholder="Ej. 01234567"><div class="err">Ingresa el número de operación.</div></div>
-            <div class="field">
-              <label>Captura de pago <span class="optional">Opcional</span></label>
-              <label class="upload" for="f-captura">
-                <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                <span class="txt" id="upload-txt">Toca para <b>adjuntar</b> una imagen</span>
-                <input type="file" id="f-captura" accept="image/*">
-              </label>
-            </div>
-          </div>
-          <div class="nav">
-            <button class="btn btn-primary" data-next>Siguiente<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-          </div>
-        </section>
-
-        <!-- PHASE 3: TERMINOS -->
-        <section class="phase" data-phase="3">
           <h2>Términos y condiciones</h2>
-          <p class="sub">Léelos y acéptalos para finalizar tu registro.</p>
+          <p class="sub">Léelos y acéptalos para continuar con el pago.</p>
           <div class="terms-wrap">
             <div class="terms-scroll">
               <p>Texto de relleno temporal — reemplázalo por los términos reales del evento.</p>
@@ -402,12 +374,56 @@ body{ font-family:var(--font); background:var(--bg); color:var(--ink); height:10
           </div>
         </section>
 
+        <!-- PHASE 3: PAGO (tarjeta o Yape, dentro de la página) -->
+        <section class="phase" data-phase="3">
+          <h2 class="pay-title">Paga tu entrada</h2>
+          <div class="body">
+            <div class="order">
+              <div><div class="k">Tu entrada</div><div class="t" id="order-type">General</div></div>
+              <div class="p" id="order-price">S/ 60</div>
+            </div>
+
+            <div class="pay-tabs" id="pay-tabs" role="tablist">
+              <button type="button" class="on" data-method="tarjeta" role="tab">Tarjeta</button>
+              <button type="button" data-method="yape" role="tab">Yape</button>
+            </div>
+
+            <div class="pay-error" id="pay-error" role="alert"></div>
+
+            <!-- TARJETA
+                 CONEXIÓN: al integrar Mercado Pago, estos campos de tarjeta se reemplazan por los
+                 campos seguros de MercadoPago.js (los datos de la tarjeta nunca tocan nuestro servidor). -->
+            <div class="pay-pane on" data-pane="tarjeta">
+              <div class="field"><label for="c-num">Número de tarjeta</label><input type="text" id="c-num" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="23"><div class="err">Ingresa un número de tarjeta válido.</div></div>
+              <div class="row2">
+                <div class="field"><label for="c-exp">Vencimiento</label><input type="text" id="c-exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" maxlength="5"><div class="err">Fecha no válida.</div></div>
+                <div class="field"><label for="c-cvv">Código de seguridad</label><input type="text" id="c-cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="CVV" maxlength="4"><div class="err">Código no válido.</div></div>
+              </div>
+              <div class="row2">
+                <div class="field"><label for="c-name">Titular de la tarjeta</label><input type="text" id="c-name" autocomplete="cc-name" placeholder="Como figura en la tarjeta"><div class="err">Ingresa el titular.</div></div>
+                <div class="field"><label for="c-doc">DNI del titular</label><input type="text" id="c-doc" inputmode="numeric" maxlength="8" placeholder="00000000"><div class="err">DNI no válido.</div></div>
+              </div>
+            </div>
+
+            <!-- YAPE: celular + código de aprobación de la app -->
+            <div class="pay-pane" data-pane="yape">
+              <div class="field"><label for="y-cel">Celular afiliado a Yape</label><input type="text" id="y-cel" inputmode="numeric" autocomplete="tel-national" placeholder="999 999 999" maxlength="11"><div class="err">Ingresa un celular válido de 9 dígitos.</div></div>
+              <div class="field"><label for="y-cod">Código de aprobación</label><input type="text" id="y-cod" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="6"><div class="err">El código tiene 6 dígitos.</div>
+                <div class="hint">Abre tu app de Yape, entra al menú y toca «Código de aprobación». Son 6 dígitos y cambia cada pocos segundos.</div></div>
+            </div>
+          </div>
+          <div class="nav pay-nav">
+            <button class="btn btn-primary" id="pay-btn"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="pay-label">Pagar S/ 60</span></button>
+            <div class="secure"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.500-3 8-7 10-4-2-7-5.500-7-10V6z"/></svg>Pago seguro procesado por Mercado Pago</div>
+          </div>
+        </section>
+
         <!-- PHASE 4: CONFIRMACION -->
         <section class="phase" data-phase="4">
           <div class="done">
             <div class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
-            <h2>¡Registro recibido!</h2>
-            <p>Verificaremos tu pago y, si todo está correcto, entrarás a la lista y recibirás tu entrada en <span class="mail" id="done-mail">el correo que registraste</span>.</p>
+            <h2>¡Pago aprobado!</h2>
+            <p>Tu entrada ya está confirmada. En unos minutos la recibirás con su código QR en <span class="mail" id="done-mail">el correo que registraste</span>.</p>
             <a href="index.html" class="btn btn-primary done-exit">Salir</a>
           </div>
         </section>
@@ -498,69 +514,146 @@ navOverlay.querySelectorAll('a').forEach(function(a) {
 
 <script>
 (function(){
-  var phase = 1, total = 4;
+  /* ─────────────────────────────────────────────────────────────────────
+     PAGO CON MERCADO PAGO (Checkout API, API de Orders)
+     Versión visual: el pago está SIMULADO, todavía no se cobra nada.
+     CONEXIÓN, cuando exista el backend:
+       1. Cargar MercadoPago.js y crearlo con MP_PUBLIC_KEY (clave pública de PRUEBA).
+       2. Generar el token de la tarjeta o de Yape en el navegador.
+       3. Enviar al backend: token + datos del comprador + evento + tipo de entrada.
+          El backend calcula el monto desde EVENTOS_CONFIG (nunca el navegador),
+          crea la orden con el Access Token y responde aprobado o rechazado.
+     El precio que ve el comprador es el final: la comisión de Mercado Pago
+     la asume DarkerPass y no se suma como cargo.
+     ───────────────────────────────────────────────────────────────────── */
+  var MP_PUBLIC_KEY = 'APP_USR-cdaf3a1a-5f36-4e31-8c8e-3b6a2e7b4703';
+
+  var phase = 1, total = 4, PAGO = 3, metodo = 'tarjeta', procesando = false;
   var sections = document.querySelectorAll('.phase');
   var segs = document.querySelectorAll('#seg i');
   var label = document.getElementById('step-label');
   var stepBack = document.getElementById('step-back');
+  function $(id){ return document.getElementById(id); }
+  function digitos(v){ return v.replace(/\D/g, ''); }
 
   function show(n){
     sections.forEach(function(s){ s.classList.toggle('active', +s.dataset.phase === n); });
     segs.forEach(function(i,idx){ i.classList.toggle('on', idx < n); });
     label.textContent = 'Paso ' + n + ' de ' + total;
-    // Atrás solo en pasos 2 y 3
+    // Atrás solo en términos y pago
     stepBack.hidden = !(n === 2 || n === 3);
     phase = n;
-    var area = document.querySelector('.phase-area'); if(area) area.scrollTop = 0;
+    document.querySelectorAll('.phase .body').forEach(function(b){ b.scrollTop = 0; });
+    if (n === PAGO) prepararPago();
   }
 
-  function validate(n){
-    var ok = true;
-    function check(id, cond){
-      var f = document.getElementById(id).closest('.field');
-      var bad = !cond; f.classList.toggle('invalid', bad); if(bad) ok = false;
-    }
-    if(n===1){
-      check('f-nombre', document.getElementById('f-nombre').value.trim().length>1);
-      check('f-dni', /^\d{8}$/.test(document.getElementById('f-dni').value.trim()));
-      check('f-tipo', document.getElementById('f-tipo').value!=='');
-      check('f-correo', /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(document.getElementById('f-correo').value.trim()));
-    }
-    if(n===2){
-      check('f-operacion', document.getElementById('f-operacion').value.trim().length>0);
-    }
-    return ok;
+  function check(id, cond){
+    var f = $(id).closest('.field');
+    f.classList.toggle('invalid', !cond);
+    return cond;
+  }
+  function validarDatos(){
+    var a = check('f-nombre', $('f-nombre').value.trim().length > 1);
+    var b = check('f-dni', /^\d{8}$/.test($('f-dni').value.trim()));
+    var c = check('f-tipo', $('f-tipo').value !== '');
+    var d = check('f-correo', /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('f-correo').value.trim()));
+    return a && b && c && d;
   }
 
   document.querySelectorAll('[data-next]').forEach(function(btn){
     btn.addEventListener('click', function(){
-      if(!validate(phase)) return;
-      if(phase===1){ var m=document.getElementById('f-correo').value.trim(); if(m) document.getElementById('done-mail').textContent=m; }
-      if(phase<total) show(phase+1);
+      if (phase === 1) {
+        if (!validarDatos()) return;
+        $('done-mail').textContent = $('f-correo').value.trim();
+      }
+      if (phase < total) show(phase + 1);
     });
   });
-  stepBack.addEventListener('click', function(){ if(phase>1) show(phase-1); });
+  stepBack.addEventListener('click', function(){ if (!procesando && phase > 1) show(phase - 1); });
 
   // clear invalid on input
   document.querySelectorAll('.field input, .field select').forEach(function(el){
-    el.addEventListener('input', function(){ el.closest('.field').classList.remove('invalid'); });
+    el.addEventListener('input', function(){ el.closest('.field').classList.remove('invalid'); $('pay-error').classList.remove('show'); });
   });
 
-  // copy yape number
-  var copyBtn = document.getElementById('copy-btn');
-  copyBtn.addEventListener('click', function(){
-    var num = document.getElementById('pay-number').textContent.replace(/\s/g,'');
-    navigator.clipboard && navigator.clipboard.writeText(num);
-    var old = copyBtn.innerHTML; copyBtn.innerHTML = '✓ Copiado';
-    setTimeout(function(){ copyBtn.innerHTML = old; }, 1500);
+  /* ── Paso de pago ── */
+  function prepararPago(){
+    // "General — S/ 60" → tipo y precio. CONEXIÓN: vendrán del evento (columnas de precio del Sheet).
+    var partes = $('f-tipo').value.split('—');
+    var tipo = (partes[0] || '').trim(), precio = (partes[1] || '').trim();
+    $('order-type').textContent = tipo; $('order-price').textContent = precio;
+    $('pay-label').textContent = 'Pagar ' + precio;
+    // Se proponen los datos del paso 1; el comprador puede cambiarlos si la tarjeta es de otra persona
+    if (!$('c-name').value) $('c-name').value = $('f-nombre').value.trim();
+    if (!$('c-doc').value) $('c-doc').value = $('f-dni').value.trim();
+  }
+  $('pay-tabs').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b || procesando) return;
+    metodo = b.dataset.method;
+    $('pay-tabs').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
+    document.querySelectorAll('.pay-pane').forEach(function(p){ p.classList.toggle('on', p.dataset.pane === metodo); });
+    $('pay-error').classList.remove('show');
   });
 
-  // file name
-  var file = document.getElementById('f-captura');
-  file.addEventListener('change', function(){
-    var t = document.getElementById('upload-txt');
-    if(file.files && file.files.length){ t.innerHTML = '<b>'+file.files[0].name+'</b>'; }
-    else { t.innerHTML = 'Toca para <b>adjuntar</b> una imagen'; }
+  // Formato mientras se escribe
+  $('c-num').addEventListener('input', function(){ this.value = digitos(this.value).slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 '); });
+  $('c-exp').addEventListener('input', function(){ var d = digitos(this.value).slice(0, 4); this.value = d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; });
+  ['c-cvv', 'c-doc', 'y-cod', 'f-dni'].forEach(function(id){ $(id).addEventListener('input', function(){ this.value = digitos(this.value); }); });
+  $('y-cel').addEventListener('input', function(){ this.value = digitos(this.value).slice(0, 9).replace(/(\d{3})(?=\d)/g, '$1 '); });
+
+  function luhn(n){
+    var s = 0, alt = false;
+    for (var i = n.length - 1; i >= 0; i--) { var d = +n[i]; if (alt) { d *= 2; if (d > 9) d -= 9; } s += d; alt = !alt; }
+    return s % 10 === 0;
+  }
+  function vencimientoValido(v){
+    var m = /^(\d{2})\/(\d{2})$/.exec(v); if (!m) return false;
+    var mes = +m[1], anio = 2000 + (+m[2]), hoy = new Date();
+    return mes >= 1 && mes <= 12 && (anio > hoy.getFullYear() || (anio === hoy.getFullYear() && mes >= hoy.getMonth() + 1));
+  }
+  function validarPago(){
+    if (metodo === 'yape') {
+      var a = check('y-cel', /^9\d{8}$/.test(digitos($('y-cel').value)));
+      var b = check('y-cod', /^\d{6}$/.test($('y-cod').value));
+      return a && b;
+    }
+    var num = digitos($('c-num').value);
+    var c = check('c-num', num.length >= 13 && luhn(num));
+    var d = check('c-exp', vencimientoValido($('c-exp').value));
+    var e = check('c-cvv', /^\d{3,4}$/.test($('c-cvv').value));
+    var f = check('c-name', $('c-name').value.trim().length > 2);
+    var g = check('c-doc', /^\d{8}$/.test($('c-doc').value));
+    return c && d && e && f && g;
+  }
+
+  var payBtn = $('pay-btn'), payHTML = payBtn.innerHTML;
+  function bloquear(si){
+    procesando = si;
+    payBtn.disabled = si;
+    document.querySelectorAll('[data-phase="3"] input, #pay-tabs button').forEach(function(el){ el.disabled = si; });
+    stepBack.style.opacity = si ? '0.4' : '';
+    if (si) payBtn.innerHTML = '<span class="spin"></span>Procesando pago…';
+    else { payBtn.innerHTML = payHTML; $('pay-label').textContent = 'Pagar ' + $('order-price').textContent; }
+  }
+  payBtn.addEventListener('click', function(){
+    if (procesando || !validarPago()) return;
+    $('pay-error').classList.remove('show');
+    bloquear(true);
+    // SIMULACIÓN. CONEXIÓN: aquí va la llamada real al backend que crea la orden en Mercado Pago.
+    // Para ver el rechazo en esta demo: código de seguridad 000 en tarjeta, o código 000000 en Yape.
+    var rechazado = metodo === 'yape' ? $('y-cod').value === '000000' : $('c-cvv').value === '000';
+    setTimeout(function(){
+      bloquear(false);
+      if (rechazado) {
+        $('pay-error').textContent = metodo === 'yape'
+          ? 'No pudimos aprobar el pago con Yape. Revisa que el código siga vigente e inténtalo de nuevo.'
+          : 'Tu tarjeta fue rechazada. Revisa los datos o prueba con otra tarjeta o con Yape.';
+        $('pay-error').classList.add('show');
+        document.querySelector('[data-phase="3"] .body').scrollTop = 0;
+        return;
+      }
+      show(4);
+    }, 1700);
   });
 })();
 </script>
